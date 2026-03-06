@@ -1,0 +1,6 @@
+# github.com/abhipray-cpu/tenantkit/adapters/http-fiber
+./test_all.go:52:27: undefined: httptest.Request
+./test_all.go:59:21: undefined: httptest.Request
+./test_all.go:66:21: undefined: httptest.Request
+./test_all.go:73:21: undefined: httptest.Request
+FAIL	github.com/abhipray-cpu/tenantkit/adapters/http-fiber [build failed]

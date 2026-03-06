@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run golangci-lint (core)
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          args: --timeout=5m
+          working-directory: tenantkit
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tenantkit
+          POSTGRES_PASSWORD: tenantkit_secret
+          POSTGRES_DB: tenantkit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Download dependencies
+        run: |
+          cd tenantkit && go mod download
+
+      - name: Run core tests
+        run: |
+          cd tenantkit && go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Run adapter tests (no infrastructure needed)
+        run: |
+          for dir in adapters/limiter-memory adapters/quota-memory adapters/metrics-noop; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
+          done
+
+      - name: Run adapter tests (Redis needed)
+        run: |
+          for dir in adapters/limiter-redis adapters/quota-redis; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
+          done
+
+      - name: Build all adapters
+        run: |
+          for dir in adapters/*/; do
+            echo "=== Building $dir ==="
+            (cd "$dir" && go build ./...) || exit 1
+          done
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: tenantkit/coverage.out
+          fail_ci_if_error: false
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do
+            echo "=== Building $dir ==="
+            (cd "$dir" && go build -v ./...) || exit 1
+          done
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run Gosec Security Scanner
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          cd tenantkit && gosec ./...
+          for dir in adapters/*/; do
+            echo "=== Scanning $dir ==="
+            (cd "$dir" && gosec ./...) || true
+          done

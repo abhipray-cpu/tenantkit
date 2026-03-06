@@ -1,0 +1,40 @@
+# docker-compose.yml — Local development services for TenantKit
+#
+# Usage:
+#   docker compose up -d          # Start services
+#   docker compose down           # Stop services
+#   docker compose down -v        # Stop and remove volumes
+#
+# Services:
+#   - PostgreSQL 16 on localhost:5432
+#   - Redis 7 on localhost:6379
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: tenantkit
+      POSTGRES_PASSWORD: tenantkit
+      POSTGRES_DB: tenantkit_test
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tenantkit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

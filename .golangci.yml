@@ -1,0 +1,70 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose
+    - durationcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - gocritic
+    - gofmt
+    - goimports
+    - gosec
+    - nilerr
+    - prealloc
+    - predeclared
+    - revive
+    - unconvert
+    - unparam
+    - whitespace
+
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment  # too noisy for a library
+  gosec:
+    excludes:
+      - G101  # false positives on "tenant_id" constants
+  revive:
+    rules:
+      - name: exported
+        arguments:
+          - "checkPrivateReceivers"
+      - name: unexported-return
+        disabled: true  # adapters return unexported types implementing ports
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      - hugeParam  # we pass Config by value intentionally
+  exhaustive:
+    default-signifies-exhaustive: true
+  errcheck:
+    check-type-assertions: true
+
+issues:
+  exclude-rules:
+    # Test files can use dot imports and have unused parameters
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
+        - unparam
+    # Examples can have unused results
+    - path: example_test\.go
+      linters:
+        - errcheck
+  max-issues-per-linter: 50
+  max-same-issues: 5

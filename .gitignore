@@ -1,0 +1,70 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing data (keep minimal footprint)
+# testing/  — NOTE: committed to repo for integration tests
+
+# Docker local scripts (keep release.sh)
+# scripts/  — NOTE: committed to repo for release automation
+
+# Docker volumes and local data
+.docker/
+*.db
+*.sqlite
+*.log
+
+# Coverage
+coverage.out
+coverage.html
+*.coverprofile
+
+# Vendor (use go modules)
+vendor/
+
+# Local environment
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Build artifacts
+dist/
+build/
+bin/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Performance/profiling
+*.prof
+*.pprof
+*.trace
+
+# Local development
+docker-compose.override.yml
+*.local.yml
