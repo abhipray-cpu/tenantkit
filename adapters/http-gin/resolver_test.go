@@ -140,7 +140,7 @@ func TestParamResolver(t *testing.T) {
 				pname = "tenantID"
 			}
 			if tt.value != "" {
-				c.Params = gin.Params{{Key: pname, Value: tt.value}}
+				c.Params = gin.Params{gin.Param{Key: pname, Value: tt.value}}
 			}
 			
 			r := &ParamResolver{ParamName: tt.param}

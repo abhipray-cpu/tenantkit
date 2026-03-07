@@ -8,12 +8,12 @@ replace github.com/abhipray-cpu/tenantkit/adapters/limiter-memory => ../../adapt
 
 replace github.com/abhipray-cpu/tenantkit/adapters/limiter-redis => ../../adapters/limiter-redis
 
-replace github.com/abhipray-cpu/tenantkit/domain => ../../tenantkit/domain
+replace github.com/abhipray-cpu/tenantkit/domain => ../../domain
 
 require (
 	github.com/abhipray-cpu/tenantkit/adapters/limiter-memory v0.0.0-00010101000000-000000000000
 	github.com/abhipray-cpu/tenantkit/adapters/limiter-redis v0.0.0-00010101000000-000000000000
-	github.com/abhipray-cpu/tenantkit/tenantkit v0.0.0
+	github.com/abhipray-cpu/tenantkit/tenantkit v1.0.0
 )
 
 require (

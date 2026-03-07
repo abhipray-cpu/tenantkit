@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/abhipray-cpu/tenantkit/domain"
-	"github.com/go-chi/chi/v5"
+	chirouter "github.com/go-chi/chi/v5"
 )
 
 func TestMiddleware_HeaderResolver(t *testing.T) {
@@ -183,9 +183,9 @@ func TestWithTenantID(t *testing.T) {
 }
 
 func TestURLParam(t *testing.T) {
-	r := chi.NewRouter()
+	r := chirouter.NewRouter()
 
-	r.Route("/tenants/{tenantID}", func(r chi.Router) {
+	r.Route("/tenants/{tenantID}", func(r chirouter.Router) {
 		r.Use(Middleware(&Config{
 			Resolver: NewURLParamResolver("tenantID"),
 		}))
@@ -221,7 +221,7 @@ func TestURLParam(t *testing.T) {
 }
 
 func TestMiddleware_Integration(t *testing.T) {
-	r := chi.NewRouter()
+	r := chirouter.NewRouter()
 
 	// Add tenant middleware
 	r.Use(Middleware(&Config{
