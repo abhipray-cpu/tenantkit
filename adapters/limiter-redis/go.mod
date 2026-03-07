@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/abhipray-cpu/tenantkit/tenantkit v1.0.0
-	github.com/alicebob/miniredis/v2 v2.36.1
+	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/redis/go-redis/v9 v9.17.3
 )
 
