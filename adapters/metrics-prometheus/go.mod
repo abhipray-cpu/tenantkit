@@ -3,7 +3,7 @@ module github.com/abhipray-cpu/tenantkit/adapters/metrics-prometheus
 go 1.23.0
 
 require (
-	github.com/abhipray-cpu/tenantkit/tenantkit v0.0.0
+	github.com/abhipray-cpu/tenantkit/tenantkit v1.0.0
 	github.com/prometheus/client_golang v1.23.2
 )
 
@@ -19,9 +19,3 @@ require (
 	golang.org/x/sys v0.35.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 )
-
-replace github.com/abhipray-cpu/tenantkit/tenantkit v0.0.0 => ../../tenantkit
-
-replace github.com/abhipray-cpu/tenantkit/tenantkit/domain v0.0.0 => ../../tenantkit/domain
-
-replace github.com/abhipray-cpu/tenantkit/domain => ../../tenantkit/domain

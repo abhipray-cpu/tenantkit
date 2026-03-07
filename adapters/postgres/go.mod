@@ -9,7 +9,3 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	golang.org/x/text v0.29.0 // indirect
 )
-
-replace github.com/abhipray-cpu/tenantkit/tenantkit => ../../tenantkit
-
-replace github.com/abhipray-cpu/tenantkit/domain => ../../tenantkit/domain

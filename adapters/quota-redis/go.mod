@@ -2,14 +2,9 @@ module github.com/abhipray-cpu/tenantkit/adapters/quota-redis
 
 go 1.23
 
-replace (
-	github.com/abhipray-cpu/tenantkit/domain => ../../tenantkit/domain
-	github.com/abhipray-cpu/tenantkit/tenantkit => ../../tenantkit
-)
-
 require (
-	github.com/abhipray-cpu/tenantkit/domain v0.0.0
-	github.com/abhipray-cpu/tenantkit/tenantkit v0.0.0
+	github.com/abhipray-cpu/tenantkit/domain v1.0.0
+	github.com/abhipray-cpu/tenantkit/tenantkit v1.0.0
 	github.com/alicebob/miniredis/v2 v2.36.1
 	github.com/redis/go-redis/v9 v9.17.3
 )

@@ -3,7 +3,7 @@ module github.com/abhipray-cpu/tenantkit/adapters/http-fiber
 go 1.23.0
 
 require (
-	github.com/abhipray-cpu/tenantkit/domain v0.0.0
+	github.com/abhipray-cpu/tenantkit/domain v1.0.0
 	github.com/gofiber/fiber/v2 v2.52.0
 )
 
@@ -20,5 +20,3 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 )
-
-replace github.com/abhipray-cpu/tenantkit/domain => ../../tenantkit/domain

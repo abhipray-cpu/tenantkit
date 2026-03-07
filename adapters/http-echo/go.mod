@@ -3,7 +3,7 @@ module github.com/abhipray-cpu/tenantkit/adapters/http-echo
 go 1.24.0
 
 require (
-	github.com/abhipray-cpu/tenantkit/domain v0.0.0
+	github.com/abhipray-cpu/tenantkit/domain v1.0.0
 	github.com/labstack/echo/v4 v4.11.4
 )
 
@@ -19,5 +19,3 @@ require (
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
 )
-
-replace github.com/abhipray-cpu/tenantkit/domain => ../../tenantkit/domain
