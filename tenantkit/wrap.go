@@ -372,7 +372,7 @@ func (db *DB) countPlaceholders(query string) int {
 		for _, match := range matches {
 			if len(match) > 1 {
 				var n int
-				fmt.Sscanf(match[1], "%d", &n) //nolint:errcheck,gosec // parsing optional placeholder number
+				fmt.Sscanf(match[1], "%d", &n) //nolint:errcheck,gosec // parsing optional placeholder number #nosec G104
 				if n > maxN {
 					maxN = n
 				}
@@ -1018,7 +1018,7 @@ func (db *DB) renumberPlaceholders(query string, offset int) string {
 			numStart := match[2]
 			numEnd := match[3]
 			var n int
-			fmt.Sscanf(query[numStart:numEnd], "%d", &n) //nolint:errcheck,gosec // parsing placeholder number
+			fmt.Sscanf(query[numStart:numEnd], "%d", &n) //nolint:errcheck,gosec // parsing placeholder number #nosec G104
 			newPlaceholder := fmt.Sprintf("$%d", n+offset)
 			result = result[:match[0]] + newPlaceholder + result[match[1]:]
 		}

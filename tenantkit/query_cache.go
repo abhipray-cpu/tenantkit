@@ -39,7 +39,7 @@ func NewQueryCache(maxSize int) *QueryCache {
 // hashQuery creates a fast hash for a query string
 func hashQuery(query string) uint64 {
 	h := fnv.New64a()
-	h.Write([]byte(query)) //nolint:errcheck,gosec // fnv.Hash.Write never returns an error
+	h.Write([]byte(query)) //nolint:errcheck,gosec // fnv.Hash.Write never returns an error #nosec G104
 	return h.Sum64()
 }
 
