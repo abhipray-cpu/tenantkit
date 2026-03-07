@@ -65,7 +65,7 @@ jobs:
 
       # ── Step 1: Lint ────────────────────────────────────────────────
       - name: "[1/6] Lint"
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v2.8.0
           args: --timeout=5m
