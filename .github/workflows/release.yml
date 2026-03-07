@@ -58,7 +58,7 @@ jobs:
       # ── Download all workspace deps (GOPROXY=direct bypasses stale proxy cache) ─
       - name: Download dependencies
         run: |
-          cd tenantkit && go mod download || true
+          (cd tenantkit && go mod download) || true
           for dir in adapters/*/; do
             (cd "$dir" && go mod download) || true
           done
@@ -74,7 +74,7 @@ jobs:
       # ── Step 2: Unit Tests ──────────────────────────────────────────
       - name: "[2/6] Unit tests — core"
         run: |
-          cd tenantkit && go test -v -race -coverprofile=coverage.out ./...
+          (cd tenantkit && go test -v -race -coverprofile=coverage.out ./...)
 
       - name: "[2/6] Unit tests — adapters (no infra)"
         run: |
@@ -110,7 +110,7 @@ jobs:
           GOOS: linux
           GOARCH: amd64
         run: |
-          cd tenantkit && go build -v ./...
+          (cd tenantkit && go build -v ./...)
           for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
 
       - name: "[3/6] Build — darwin/arm64"
@@ -118,7 +118,7 @@ jobs:
           GOOS: darwin
           GOARCH: arm64
         run: |
-          cd tenantkit && go build -v ./...
+          (cd tenantkit && go build -v ./...)
           for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
 
       - name: "[3/6] Build — windows/amd64"
@@ -126,7 +126,7 @@ jobs:
           GOOS: windows
           GOARCH: amd64
         run: |
-          cd tenantkit && go build -v ./...
+          (cd tenantkit && go build -v ./...)
           for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
 
       # ── Step 4: Security Scan ───────────────────────────────────────
