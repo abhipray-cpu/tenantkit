@@ -1,0 +1,23 @@
+go 1.24.0
+
+use (
+        ./adapters/gorm
+        ./adapters/http-chi
+        ./adapters/http-echo
+        ./adapters/http-fiber
+        ./adapters/http-gin
+        ./adapters/http-stdlib
+        ./adapters/limiter-memory
+        ./adapters/limiter-redis
+        ./adapters/metrics-noop
+        ./adapters/metrics-prometheus
+        ./adapters/postgres
+        ./adapters/quota-memory
+        ./adapters/quota-redis
+        ./adapters/sql
+        ./adapters/sqlx
+        ./examples/basic
+        ./examples/http-middleware
+        ./tenantkit
+        ./tenantkit/domain
+)

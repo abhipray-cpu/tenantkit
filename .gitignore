@@ -8,7 +8,8 @@
 *.out
 
 # Go workspace
-go.work
+# go.work is committed so CI can resolve local module dependencies
+# go.work
 go.work.sum
 
 # IDE
