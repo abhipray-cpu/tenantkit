@@ -58,7 +58,7 @@ jobs:
       # ── Download all workspace deps (GOPROXY=direct bypasses stale proxy cache) ─
       - name: Download dependencies
         run: |
-          cd tenantkit && go mod download
+          cd tenantkit && go mod download || true
           for dir in adapters/*/; do
             (cd "$dir" && go mod download) || true
           done
