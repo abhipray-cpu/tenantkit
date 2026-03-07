@@ -9,4 +9,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.33
 )
 
-require github.com/jackc/pgx/v5 v5.8.0 // indirect
+require (
+	github.com/abhipray-cpu/tenantkit/domain v1.0.0 // indirect
+	github.com/jackc/pgx/v5 v5.8.0 // indirect
+)

@@ -19,13 +19,13 @@ func TestHeaderResolver(t *testing.T) {
 		{"custom header", "X-Custom", "t2", false, "t2"},
 		{"missing", "", "", true, ""},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			req := httptest.NewRequest("GET", "/", nil)
 			c.Request = req
-			
+
 			if tt.value != "" {
 				h := tt.header
 				if h == "" {
@@ -33,10 +33,10 @@ func TestHeaderResolver(t *testing.T) {
 				}
 				req.Header.Set(h, tt.value)
 			}
-			
+
 			r := &HeaderResolver{HeaderName: tt.header}
 			got, err := r.Resolve(c)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -62,17 +62,17 @@ func TestSubdomainResolver(t *testing.T) {
 		{"no subdomain", "example.com", "example.com", true, ""},
 		{"wrong base", "t1.other.com", "example.com", true, ""},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			req := httptest.NewRequest("GET", "/", nil)
 			req.Host = tt.host
 			c.Request = req
-			
+
 			r := &SubdomainResolver{BaseDomain: tt.base}
 			got, err := r.Resolve(c)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -96,16 +96,16 @@ func TestPathResolver(t *testing.T) {
 		{"out of range", "/api", 5, true, ""},
 		{"negative", "/api", -1, true, ""},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			req := httptest.NewRequest("GET", tt.path, nil)
 			c.Request = req
-			
+
 			r := &PathResolver{PathIndex: tt.index}
 			got, err := r.Resolve(c)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -128,13 +128,13 @@ func TestParamResolver(t *testing.T) {
 		{"custom param", "tid", "t2", false, "t2"},
 		{"missing", "tenantID", "", true, ""},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			req := httptest.NewRequest("GET", "/", nil)
 			c.Request = req
-			
+
 			pname := tt.param
 			if pname == "" {
 				pname = "tenantID"
@@ -142,10 +142,10 @@ func TestParamResolver(t *testing.T) {
 			if tt.value != "" {
 				c.Params = gin.Params{gin.Param{Key: pname, Value: tt.value}}
 			}
-			
+
 			r := &ParamResolver{ParamName: tt.param}
 			got, err := r.Resolve(c)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -168,11 +168,11 @@ func TestQueryParamResolver(t *testing.T) {
 		{"custom", "tid", "t2", false, "t2"},
 		{"missing", "tenant", "", true, ""},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
-			
+
 			url := "/"
 			if tt.value != "" {
 				p := tt.param
@@ -181,13 +181,13 @@ func TestQueryParamResolver(t *testing.T) {
 				}
 				url += "?" + p + "=" + tt.value
 			}
-			
+
 			req := httptest.NewRequest("GET", url, nil)
 			c.Request = req
-			
+
 			r := &QueryParamResolver{ParamName: tt.param}
 			got, err := r.Resolve(c)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -226,23 +226,23 @@ func TestChainResolver(t *testing.T) {
 			"",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			c.Request = httptest.NewRequest("GET", "/", nil)
 			tt.setup(c)
-			
+
 			var resolvers []TenantResolver
 			if tt.name == "all fail" {
 				resolvers = []TenantResolver{&HeaderResolver{}, &QueryParamResolver{}}
 			} else {
 				resolvers = []TenantResolver{&HeaderResolver{}, &StaticResolver{TenantID: "fallback"}}
 			}
-			
+
 			r := &ChainResolver{Resolvers: resolvers}
 			got, err := r.Resolve(c)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -262,15 +262,15 @@ func TestStaticResolver(t *testing.T) {
 		{"valid", "static", false},
 		{"empty", "", true},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			c.Request = httptest.NewRequest("GET", "/", nil)
-			
+
 			r := &StaticResolver{TenantID: tt.tenant}
 			got, err := r.Resolve(c)
-			
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
