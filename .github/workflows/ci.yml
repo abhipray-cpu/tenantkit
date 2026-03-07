@@ -65,7 +65,7 @@ jobs:
         run: (cd tenantkit && go mod download) || true
       - name: Run tests
         run: (cd tenantkit && go test -v -race -coverprofile=coverage.out ./...)
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           files: tenantkit/coverage.out
           fail_ci_if_error: false
