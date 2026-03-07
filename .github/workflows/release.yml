@@ -13,8 +13,34 @@ env:
 
 jobs:
   release:
-    name: Create Release
+    name: Release Pipeline  # lint → test → build → security → release → notify (linear)
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tenantkit
+          POSTGRES_PASSWORD: tenantkit_secret
+          POSTGRES_DB: tenantkit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,66 +53,131 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Run tests before release
-        run: |
-          cd tenantkit && go test -v -race ./...
+      # ── Step 1: Lint ────────────────────────────────────────────────
+      - name: "[1/6] Lint"
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          args: --timeout=5m
+          working-directory: tenantkit
 
-      - name: Generate changelog
+      # ── Step 2: Unit Tests ──────────────────────────────────────────
+      - name: "[2/6] Unit tests — core"
+        run: |
+          cd tenantkit && go test -v -race -coverprofile=coverage.out ./...
+
+      - name: "[2/6] Unit tests — adapters (no infra)"
+        run: |
+          for dir in adapters/limiter-memory adapters/quota-memory adapters/metrics-noop; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
+          done
+
+      - name: "[2/6] Unit tests — adapters (Redis)"
+        run: |
+          for dir in adapters/limiter-redis adapters/quota-redis; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
+          done
+
+      - name: "[2/6] Unit tests — HTTP adapters"
+        run: |
+          for dir in adapters/http-gin adapters/http-echo adapters/http-chi adapters/http-fiber adapters/http-stdlib; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
+          done
+
+      - name: "[2/6] Unit tests — DB adapters"
+        run: |
+          for dir in adapters/gorm adapters/sqlx adapters/sql adapters/metrics-prometheus; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
+          done
+
+      # ── Step 3: Build ───────────────────────────────────────────────
+      - name: "[3/6] Build — linux/amd64"
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
+
+      - name: "[3/6] Build — darwin/arm64"
+        env:
+          GOOS: darwin
+          GOARCH: arm64
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
+
+      - name: "[3/6] Build — windows/amd64"
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
+
+      # ── Step 4: Security Scan ───────────────────────────────────────
+      - name: "[4/6] Security scan"
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          echo "=== Scanning core ==="
+          (cd tenantkit && gosec ./...)
+          for dir in adapters/*/; do
+            echo "=== Scanning $dir ==="
+            (cd "$dir" && gosec ./...) || true
+          done
+
+      # ── Step 5: Create GitHub Release ──────────────────────────────
+      - name: "[5/6] Generate changelog"
         id: changelog
         run: |
-          # Get the previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
           if [ -z "$PREV_TAG" ]; then
-            echo "First release"
             CHANGES=$(git log --pretty=format:"- %s (%h)" HEAD)
           else
             CHANGES=$(git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD)
           fi
-          
           echo "changes<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
+      - name: "[5/6] Create GitHub Release"
         uses: softprops/action-gh-release@v1
         with:
           body: |
             ## What's Changed
-            
+
             ${{ steps.changelog.outputs.changes }}
-            
+
             ## Installation
-            
+
             ```bash
             go get github.com/abhipray-cpu/tenantkit/tenantkit@${{ github.ref_name }}
             ```
-            
+
             ## Quick Start
-            
+
             ```go
             import "github.com/abhipray-cpu/tenantkit/tenantkit"
-            
+
             wrappedDB, err := tenantkit.Wrap(db, tenantkit.Config{
                 TenantTables: []string{"users", "orders"},
                 TenantColumn: "tenant_id",
             })
             ```
-            
+
             See [Usage Guide](./docs/usage.md) for detailed documentation.
           draft: false
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  notify:
-    name: Notify pkg.go.dev
-    runs-on: ubuntu-latest
-    needs: release
-    steps:
-      - name: Notify Go Module Proxy
+      # ── Step 6: Notify pkg.go.dev ───────────────────────────────────
+      - name: "[6/6] Notify Go Module Proxy"
         run: |
-          # Notify proxy for each published module
           for mod in \
             "github.com/abhipray-cpu/tenantkit/tenantkit" \
             "github.com/abhipray-cpu/tenantkit/domain" \

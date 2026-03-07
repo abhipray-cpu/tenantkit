@@ -10,29 +10,10 @@ env:
   GO_VERSION: '1.21'
 
 jobs:
-  lint:
-    name: Lint
+  ci:
+    name: CI Pipeline  # lint → unit tests → build → security (linear)
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-
-      - name: Run golangci-lint (core)
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
-          args: --timeout=5m
-          working-directory: tenantkit
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16-alpine
@@ -68,33 +49,45 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Download dependencies
-        run: |
-          cd tenantkit && go mod download
+      # ── Step 1: Lint ────────────────────────────────────────────────
+      - name: "[1/4] Lint"
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          args: --timeout=5m
+          working-directory: tenantkit
 
-      - name: Run core tests
+      # ── Step 2: Unit Tests ──────────────────────────────────────────
+      - name: "[2/4] Unit tests — core"
         run: |
           cd tenantkit && go test -v -race -coverprofile=coverage.out ./...
 
-      - name: Run adapter tests (no infrastructure needed)
+      - name: "[2/4] Unit tests — adapters (no infra)"
         run: |
           for dir in adapters/limiter-memory adapters/quota-memory adapters/metrics-noop; do
             echo "=== Testing $dir ==="
             (cd "$dir" && go test -v -race ./...) || exit 1
           done
 
-      - name: Run adapter tests (Redis needed)
+      - name: "[2/4] Unit tests — adapters (Redis)"
         run: |
           for dir in adapters/limiter-redis adapters/quota-redis; do
             echo "=== Testing $dir ==="
             (cd "$dir" && go test -v -race ./...) || exit 1
           done
 
-      - name: Build all adapters
+      - name: "[2/4] Unit tests — HTTP adapters"
         run: |
-          for dir in adapters/*/; do
-            echo "=== Building $dir ==="
-            (cd "$dir" && go build ./...) || exit 1
+          for dir in adapters/http-gin adapters/http-echo adapters/http-chi adapters/http-fiber adapters/http-stdlib; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
+          done
+
+      - name: "[2/4] Unit tests — DB adapters"
+        run: |
+          for dir in adapters/gorm adapters/sqlx adapters/sql adapters/metrics-prometheus; do
+            echo "=== Testing $dir ==="
+            (cd "$dir" && go test -v -race ./...) || exit 1
           done
 
       - name: Upload coverage
@@ -103,54 +96,53 @@ jobs:
           files: tenantkit/coverage.out
           fail_ci_if_error: false
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, darwin, windows]
-        goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
-            goarch: arm64
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-
-      - name: Build
+      # ── Step 3: Build (cross-platform) ─────────────────────────────
+      - name: "[3/4] Build — linux/amd64"
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
+          GOOS: linux
+          GOARCH: amd64
         run: |
           cd tenantkit && go build -v ./...
-          for dir in adapters/*/; do
-            echo "=== Building $dir ==="
-            (cd "$dir" && go build -v ./...) || exit 1
-          done
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
 
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: "[3/4] Build — linux/arm64"
+        env:
+          GOOS: linux
+          GOARCH: arm64
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
+      - name: "[3/4] Build — darwin/amd64"
+        env:
+          GOOS: darwin
+          GOARCH: amd64
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
 
-      - name: Run Gosec Security Scanner
+      - name: "[3/4] Build — darwin/arm64"
+        env:
+          GOOS: darwin
+          GOARCH: arm64
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
+
+      - name: "[3/4] Build — windows/amd64"
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          cd tenantkit && go build -v ./...
+          for dir in adapters/*/; do (cd "$dir" && go build -v ./...) || exit 1; done
+
+      # ── Step 4: Security Scan ───────────────────────────────────────
+      - name: "[4/4] Security scan"
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
-          cd tenantkit && gosec ./...
+          echo "=== Scanning core ==="
+          (cd tenantkit && gosec ./...)
           for dir in adapters/*/; do
             echo "=== Scanning $dir ==="
             (cd "$dir" && gosec ./...) || true

@@ -1,5 +1,9 @@
 # TenantKit
 
+<p align="center">
+  <img src="icon.png" alt="TenantKit" width="480" />
+</p>
+
 [![Go Reference](https://pkg.go.dev/badge/github.com/abhipray-cpu/tenantkit.svg)](https://pkg.go.dev/github.com/abhipray-cpu/tenantkit)
 [![CI](https://github.com/abhipray-cpu/tenantkit/actions/workflows/ci.yml/badge.svg)](https://github.com/abhipray-cpu/tenantkit/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/abhipray-cpu/tenantkit)](https://goreportcard.com/report/github.com/abhipray-cpu/tenantkit)
