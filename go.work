@@ -19,5 +19,5 @@ use (
         ./examples/basic
         ./examples/http-middleware
         ./tenantkit
-        ./tenantkit/domain
+        ./domain
 )
