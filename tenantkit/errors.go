@@ -45,9 +45,9 @@ func (e *TenantError) Unwrap() error {
 
 // truncate shortens a string to the specified maximum length,
 // adding "..." if truncation occurs
-func truncate(s string, max int) string {
-	if len(s) <= max {
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
 		return s
 	}
-	return s[:max] + "..."
+	return s[:maxLen] + "..."
 }

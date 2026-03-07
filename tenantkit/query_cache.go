@@ -39,7 +39,7 @@ func NewQueryCache(maxSize int) *QueryCache {
 // hashQuery creates a fast hash for a query string
 func hashQuery(query string) uint64 {
 	h := fnv.New64a()
-	h.Write([]byte(query))
+	h.Write([]byte(query)) //nolint:errcheck,gosec // fnv.Hash.Write never returns an error
 	return h.Sum64()
 }
 
@@ -137,7 +137,7 @@ var stringBuilderPool = sync.Pool{
 
 // getStringBuilder gets a string builder from the pool
 func getStringBuilder() *strings.Builder {
-	sb := stringBuilderPool.Get().(*strings.Builder)
+	sb := stringBuilderPool.Get().(*strings.Builder) //nolint:errcheck // sync.Pool.Get returns interface{}
 	sb.Reset()
 	return sb
 }
@@ -161,7 +161,7 @@ var slicePool = sync.Pool{
 
 // getArgsSlice gets a slice from the pool
 func getArgsSlice() *[]interface{} {
-	return slicePool.Get().(*[]interface{})
+	return slicePool.Get().(*[]interface{}) //nolint:errcheck // sync.Pool.Get returns interface{}
 }
 
 // putArgsSlice returns a slice to the pool

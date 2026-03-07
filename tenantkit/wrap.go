@@ -372,7 +372,7 @@ func (db *DB) countPlaceholders(query string) int {
 		for _, match := range matches {
 			if len(match) > 1 {
 				var n int
-				fmt.Sscanf(match[1], "%d", &n)
+				fmt.Sscanf(match[1], "%d", &n) //nolint:errcheck,gosec // parsing optional placeholder number
 				if n > maxN {
 					maxN = n
 				}
@@ -665,7 +665,7 @@ func (db *DB) parseTableRef(ref string) TableRef {
 	var alias string
 
 	if len(parts) >= 2 {
-		if strings.ToUpper(parts[1]) == "AS" && len(parts) >= 3 {
+		if strings.EqualFold(parts[1], "AS") && len(parts) >= 3 {
 			alias = parts[2]
 		} else {
 			alias = parts[1]
@@ -688,7 +688,7 @@ func (db *DB) filterTenantTables(tables []TableRef) []TableRef {
 		}
 
 		for _, tenantTable := range db.config.TenantTables {
-			if strings.ToLower(tenantTable) == tableName {
+			if strings.EqualFold(tenantTable, tableName) {
 				result = append(result, table)
 				break
 			}
@@ -1018,7 +1018,7 @@ func (db *DB) renumberPlaceholders(query string, offset int) string {
 			numStart := match[2]
 			numEnd := match[3]
 			var n int
-			fmt.Sscanf(query[numStart:numEnd], "%d", &n)
+			fmt.Sscanf(query[numStart:numEnd], "%d", &n) //nolint:errcheck,gosec // parsing placeholder number
 			newPlaceholder := fmt.Sprintf("$%d", n+offset)
 			result = result[:match[0]] + newPlaceholder + result[match[1]:]
 		}
