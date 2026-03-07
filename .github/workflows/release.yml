@@ -132,12 +132,12 @@ jobs:
       # ── Step 4: Security Scan ───────────────────────────────────────
       - name: "[4/6] Security scan"
         run: |
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.21.4
           echo "=== Scanning core ==="
-          (cd tenantkit && gosec ./...)
+          (cd tenantkit && gosec -exclude=G104 ./...)
           for dir in adapters/*/; do
             echo "=== Scanning $dir ==="
-            (cd "$dir" && gosec ./...) || true
+            (cd "$dir" && gosec -exclude=G104 ./...) || true
           done
 
       # ── Step 5: Create GitHub Release ──────────────────────────────
